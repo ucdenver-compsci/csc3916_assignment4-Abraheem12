@@ -87,6 +87,48 @@ router.post('/signin', function (req, res) {
     })
 });
 
+router.route('/movies')
+    .get((req, res) => {
+        Movie.find({}, (err, movies) => {
+            if (err) {
+                return res.status(500).send(err);
+            }
+            res.json(movies);
+        });
+    })
+    .post((req, res) => {
+        if (!req.body.title || !req.body.releaseDate || !req.body.genre || !req.body.actors) {
+            res.json({ success: false, msg: 'Please include all required fields: title, releaseDate, genre, and actors.' });
+        } else {
+            var movie = new Movie();
+            movie.title = req.body.title;
+            movie.releaseDate = req.body.releaseDate;
+            movie.genre = req.body.genre;
+            movie.actors = req.body.actors;
+
+            movie.save((err) => {
+                if (err) res.status(500).send(err);
+                res.json({ success: true, msg: 'Successfully created new movie.' });
+            });
+        }
+    })
+    .put(authJwtController.isAuthenticated, (req, res) => {
+        Movie.findOneAndUpdate({ title: req.body.title }, req.body, { new: true }, (err, movie) => {
+            if (err) res.status(500).send(err);
+            res.json({ success: true, msg: 'Successfully updated movie.' });
+        });
+    })
+    .delete(authController.isAuthenticated, (req, res) => {
+        Movie.findOneAndDelete({ title: req.body.title }, (err) => {
+            if (err) res.status(500).send(err);
+            res.json({ success: true, msg: 'Successfully deleted movie.' });
+        });
+    })
+    .all((req, res) => {
+        res.status(405).send({ status: 405, message: 'HTTP method not supported.' });
+    });
+
+
 app.use('/', router);
 app.listen(process.env.PORT || 8080);
 module.exports = app; // for testing only
