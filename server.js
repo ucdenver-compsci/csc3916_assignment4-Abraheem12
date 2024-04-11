@@ -91,7 +91,8 @@ router.post('/signin', function (req, res) {
 router.route('/movies')
     .get((req, res) => {
         console.log('GET /movies called');
-        Movie.find({}, 'title releaseDate genre actors -__v', (err, movies) => {
+        Movie.find({}, { title: 1, releaseDate: 1, genre: 1, actors: 1, __v: 0 }, (err, movies) => {
+
             // The '-__v' excludes the __v field from the results.
             if (err) {
                 console.error('Error retrieving movies:', err);
