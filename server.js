@@ -90,15 +90,12 @@ router.post('/signin', function (req, res) {
 
 router.route('/movies')
     .get((req, res) => {
-        Movie.find({}, 'title releaseDate genre actors -__v', (err, movies) => {
-            // The '-__v' excludes the __v field from the results.
+        Movie.find({}, (err, movies) => {
             if (err) {
                 return res.status(500).send(err);
             }
             res.json(movies);
         });
-
-        
     })
         
     .post((req, res) => {
