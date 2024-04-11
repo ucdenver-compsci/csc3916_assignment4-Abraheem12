@@ -90,13 +90,17 @@ router.post('/signin', function (req, res) {
 
 router.route('/movies')
     .get((req, res) => {
-        Movie.find({}, (err, movies) => {
+        Movie.find({}, 'title releaseDate genre actors -__v', (err, movies) => {
+            // The '-__v' excludes the __v field from the results.
             if (err) {
                 return res.status(500).send(err);
             }
             res.json(movies);
         });
+
+        
     })
+        
     .post((req, res) => {
         if (!req.body.title || !req.body.releaseDate || !req.body.genre || !req.body.actors) {
             res.json({ success: false, msg: 'Please include all required fields: title, releaseDate, genre, and actors.' });
