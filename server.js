@@ -90,16 +90,19 @@ router.post('/signin', function (req, res) {
 
 router.route('/movies')
     .get((req, res) => {
+        console.log('GET /movies called');
         Movie.find({}, 'title releaseDate genre actors -__v', (err, movies) => {
             // The '-__v' excludes the __v field from the results.
             if (err) {
+                console.error('Error retrieving movies:', err);
                 return res.status(500).send(err);
             }
+            console.log('Movies found:', movies);
             res.json(movies);
         });
-
-        
     })
+
+
         
     .post((req, res) => {
         if (!req.body.title || !req.body.releaseDate || !req.body.genre || !req.body.actors) {
@@ -137,5 +140,3 @@ router.route('/movies')
 app.use('/', router);
 app.listen(process.env.PORT || 8080);
 module.exports = app; // for testing only
-
-
