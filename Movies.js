@@ -1,12 +1,33 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-mongoose.connect(process.env.DB);
+const databaseUrl = process.env.DB;
+
+mongoose.connect(databaseUrl, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useCreateIndex: true,
+    useFindAndModify: false
+})
+    .then(() => console.log('MongoDB connected successfully.'))
+    .catch(err => console.log('Error connecting to MongoDB:', err));
 
 // Movie schema
-var MovieSchema = new Schema({
-
+const MovieSchema = new Schema({
+    title: { type: String, required: true, index: true },
+    releaseDate: Date,
+    genre: {
+        type: String,
+        enum: [
+            'Action', 'Adventure', 'Comedy', 'Drama', 'Horror', 'Mystery', 'Thriller', 'Science Fiction'
+        ],
+    },
+    actors: [{
+        actorName: String,
+        characterName: String,
+    }],
 });
 
 // return the model
 module.exports = mongoose.model('Movie', MovieSchema);
+module.exports = Movie;
