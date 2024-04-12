@@ -166,12 +166,70 @@ router.route('/movies/:title')
             else {
                 res.json({ success: true, msg: 'Successfully deleted movie.' });
             }
-            
-        });}
+
+        });
+    }
     })
     .all((req, res) => {
         res.status(405).send({ status: 405, message: 'HTTP method not supported.' });
     });
+
+router.route('/reviews')
+    .get((req, res) => {
+        console.log('Received GET request for reviewss:');
+        Review.find({}, (err, movies) => {
+            if (err) {
+                return res.status(500).send(err);
+            }
+            else {
+                res.status(200).json(movies);
+            }
+        });
+    })
+        
+    .post(authJwtController.isAuthenticated,(req, res) => {
+        console.log('Received POST request for reviews:', req.body);
+        if (!req.body.username || !req.body.review || !req.body.rating || !req.body.movieID ) {
+            res.status(400).json({ success: false, msg: 'Please include all required fields: review, rating, movieid.' });
+        } else {
+            var review = new Review();
+            review.username = req.body.username;
+            review.rating = req.body.rating;
+            review.movieID = req.body.movieID;
+            review.review = req.body.review;
+
+            console.log('Review item:', review);
+
+            review.save((err) => {
+                if (err) {
+                    res.status(500).send(err);
+                }
+                else {
+                    res.status(200).json({ success: true, msg: 'Created a review.' });
+                }
+            });
+        }
+    })
+
+    .delete(authJwtController.isAuthenticated, (req, res) => {
+        console.log("Received DELETE request for reviews with following item: ", req.body)
+        // Assuming you want to delete reviews based on their IDs, not movie titles
+        if (!req.body.reviewID) {
+            res.status(400).json({ success: false, msg: 'Review ID is required for deletion.' });
+        } else {
+            Review.findOneAndDelete({ _id: req.body.reviewID }, (err) => {
+                if (err) {
+                    res.status(500).send(err);
+                }
+                else {
+                    res.json({ success: true, msg: 'Successfully deleted review.' });
+                }
+            });
+        }
+    });
+
+    
+    
 
 
 app.use('/', router);
