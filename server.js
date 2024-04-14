@@ -243,30 +243,38 @@ router.route('/movies/:title')
         }
     });
 
-    router.route('/reviews')
-        .post(authJwtController.isAuthenticated,(req, res) => {
-            console.log('Received POST request for reviews:', req.body);
-            if (!req.body.username || !req.body.review || !req.body.rating || !req.body.movieID ) {
-                res.status(400).json({ success: false, msg: 'Please include all required fields: review, rating, movieid.' });
-            } else {
-                var review = new Review();
-                review.username = req.body.username;
-                review.rating = req.body.rating;
-                review.movieID = req.body.movieID;
-                review.review = req.body.review;
+  
+router.route('/reviews')
+    .post(authJwtController.isAuthenticated, (req, res) => {
+        console.log('Received POST request for reviews:', req.body);
+        if (!req.body.username || !req.body.review || !req.body.rating || !req.body.movieID) {
+            res.status(400).json({ success: false, msg: 'Please include all required fields: review, rating, movieID.' });
+        } else {
+            Movie.findById(req.body.movieID, (err, movie) => {
+                if (err) {
+                    res.status(500).send(err);
+                } else if (!movie) {
+                    res.status(404).json({ success: false, msg: 'Movie not found.' });
+                } else {
+                    var review = new Review();
+                    review.username = req.body.username;
+                    review.rating = req.body.rating;
+                    review.movieID = req.body.movieID;
+                    review.review = req.body.review;
 
-                console.log('Review item:', review);
+                    console.log('Review item:', review);
 
-                review.save((err) => {
-                    if (err) {
-                        res.status(500).send(err);
-                    }
-                    else {
-                        res.status(200).json({ success: true, msg: 'Created a review.' });
-                    }
-                });
-            }
-        })
+                    review.save((err) => {
+                        if (err) {
+                            res.status(500).send(err);
+                        } else {
+                            res.status(200).json({ success: true, msg: 'Created a review.' });
+                        }
+                    }); 
+                }
+            }); 
+        }
+    }) 
 
         .delete(authJwtController.isAuthenticated, (req, res) => {
             console.log("Received DELETE request for reviews with following item: ", req.body)
