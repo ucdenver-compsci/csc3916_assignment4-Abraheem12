@@ -90,19 +90,53 @@ router.post('/signin', function (req, res) {
     })
 });
 
-router.route('/movies')
+router.route('/movies/:id?') 
     .get((req, res) => {
-        console.log('Received GET request for movies:');
-        Movie.find({}, (err, movies) => {
-            if (err) {
-                return res.status(500).send(err);
+        let query = {};
+        // Check to see if the ID was provided 
+        if (req.params.id) {
+            let id;
+            try {
+                // converting to objectID if we can
+                id = mongoose.Types.ObjectId(req.params.id); 
+            } catch (error) {
+                // Use as string if the conversion does not go
+                id = req.params.id; 
             }
-            else {
-                res.status(200).json(movies);
-            }
-        });
+            // We can either movies/title or movie/ID
+            query = { $or: [{ _id: id }, { title: id }] }; 
+        } else if (req.query.title) {
+            query.title = req.query.title;
+        }
+        if (req.query.reviews === 'true') {
+            Movie.aggregate([
+                { $match: query },
+                {
+                    $lookup: {
+                        from: "reviews",
+                        localField: "_id",
+                        foreignField: "movieId",
+                        as: "reviews"
+                    }
+                }
+            ]).exec(function (err, result) {
+                if (err) {
+                    res.send(err);
+                } else {
+                    //handle any amount of movies
+                    res.json(result); 
+                }
+            });
+        } else {
+            Movie.find(query, (err, result) => {
+                if (err) {
+                    return res.status(500).send(err);
+                }
+                res.json(result); 
+            });
+        }
     })
-        
+
     .post((req, res) => {
         console.log('Received POST request for movies:', req.body);
         if (!req.body.title || !req.body.releaseDate || !req.body.genre || !req.body.actors || req.body.actors.length === 0) {
@@ -174,59 +208,82 @@ router.route('/movies/:title')
         res.status(405).send({ status: 405, message: 'HTTP method not supported.' });
     });
 
-router.route('/reviews')
-    .get((req, res) => {
-        console.log('Received GET request for reviewss:');
-        Review.find({}, (err, movies) => {
-            if (err) {
-                return res.status(500).send(err);
-            }
-            else {
-                res.status(200).json(movies);
-            }
-        });
-    })
-        
-    .post(authJwtController.isAuthenticated,(req, res) => {
-        console.log('Received POST request for reviews:', req.body);
-        if (!req.body.username || !req.body.review || !req.body.rating || !req.body.movieID ) {
-            res.status(400).json({ success: false, msg: 'Please include all required fields: review, rating, movieid.' });
-        } else {
-            var review = new Review();
-            review.username = req.body.username;
-            review.rating = req.body.rating;
-            review.movieID = req.body.movieID;
-            review.review = req.body.review;
-
-            console.log('Review item:', review);
-
-            review.save((err) => {
+    router.get('/reviews', function (req, res) {
+        // Check if the request has a movieId query parameter
+        if (req.query.movieId) {
+            console.log("it hit the get with id");
+            // Extract movieId from query parameter and trim whitespace
+            let movieId = req.query.movieId.trim();
+            console.log("it hit movieId", movieId)
+            Review.find({ movieId: movieId }, function (err, reviews) {
                 if (err) {
-                    res.status(500).send(err);
+                    return res.status(500).send(err);
                 }
-                else {
-                    res.status(200).json({ success: true, msg: 'Created a review.' });
-                }
+                // Log the number of reviews found
+                console.log("length of the review", reviews.length)
+                return res.status(200).json(reviews);
             });
-        }
-    })
-
-    .delete(authJwtController.isAuthenticated, (req, res) => {
-        console.log("Received DELETE request for reviews with following item: ", req.body)
-        // Assuming you want to delete reviews based on their IDs, not movie titles
-        if (!req.body.reviewID) {
-            res.status(400).json({ success: false, msg: 'Review ID is required for deletion.' });
-        } else {
-            Review.findOneAndDelete({ _id: req.body.reviewID }, (err) => {
+        } else if (req.query.reviewId) {
+            // If the request has a reviewId query parameter
+            let reviewId = req.query.reviewId.trim();
+            Review.findById(reviewId, function (err, review) {
                 if (err) {
-                    res.status(500).send(err);
+                    return res.status(500).send(err);
                 }
-                else {
-                    res.json({ success: true, msg: 'Successfully deleted review.' });
+                return res.status(200).json(review);
+            });
+        } else {
+            // If no query parameters are provided, return all reviews
+            Review.find(function (err, reviews) {
+                if (err) {
+                    return res.status(500).send(err);
                 }
+                return res.status(200).json(reviews);
             });
         }
     });
+
+    router.route('/reviews')
+        .post(authJwtController.isAuthenticated,(req, res) => {
+            console.log('Received POST request for reviews:', req.body);
+            if (!req.body.username || !req.body.review || !req.body.rating || !req.body.movieID ) {
+                res.status(400).json({ success: false, msg: 'Please include all required fields: review, rating, movieid.' });
+            } else {
+                var review = new Review();
+                review.username = req.body.username;
+                review.rating = req.body.rating;
+                review.movieID = req.body.movieID;
+                review.review = req.body.review;
+
+                console.log('Review item:', review);
+
+                review.save((err) => {
+                    if (err) {
+                        res.status(500).send(err);
+                    }
+                    else {
+                        res.status(200).json({ success: true, msg: 'Created a review.' });
+                    }
+                });
+            }
+        })
+
+        .delete(authJwtController.isAuthenticated, (req, res) => {
+            console.log("Received DELETE request for reviews with following item: ", req.body)
+            // Assuming you want to delete reviews based on their IDs, not movie titles
+            if (!req.body.reviewID) {
+                res.status(400).json({ success: false, msg: 'Review ID is required for deletion.' });
+            } else {
+                Review.findOneAndDelete({ _id: req.body.reviewID }, (err) => {
+                    if (err) {
+                        res.status(500).send(err);
+                    }
+                    else {
+                        res.json({ success: true, msg: 'Successfully deleted review.' });
+                    }
+                });
+            }
+        });
 
     
     
