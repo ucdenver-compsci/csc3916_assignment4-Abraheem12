@@ -182,8 +182,7 @@ router.route('/movies/:id?')
                 }
                 else {
                     res.status(200).json({ success: true, msg: 'Successfully created new movie.' });
-                    sendEventToGA4('review', getJSONObjectForMovieRequirement(req));
-                    return res.status(201).json({ message: 'Review created!' });
+                    
                 }
             });
         }
@@ -297,6 +296,8 @@ router.route('/reviews')
                             res.status(500).send(err);
                         } else {
                             res.status(200).json({ success: true, msg: 'Created a review.' });
+                            sendEventToGA4('review', getJSONObjectForMovieRequirement(req));
+                            return res.status(201).json({ message: 'Review created!' });
                         }
                     }); 
                 }
