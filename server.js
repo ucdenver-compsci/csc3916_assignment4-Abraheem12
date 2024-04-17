@@ -15,6 +15,7 @@ var cors = require('cors');
 var User = require('./Users');
 var Movie = require('./Movies');
 var Review = require('./Reviews');
+var crypto = require('crypto');
 
 var app = express();
 app.use(cors());
@@ -25,6 +26,31 @@ app.use(passport.initialize());
 
 
 var router = express.Router();
+
+const measurement_protocl_id = process.env.MEASUREMENT_ID; //load up the measure id from the .env file 
+const apiKey = process.env.API_KEY;// load up the api that i created in google analytics
+// function to sent an event to GA4
+async function sendEventToGA4(eventName, params) {
+    const payload = {
+        client_id: crypto.randomBytes(16).toString("hex"), 
+        events: [{
+            name: eventName,
+            params: params,
+        }],
+    };
+
+    const response = await fetch(`https://www.google-analytics.com/mp/collect?measurement_id=${measurementId}&api_secret=${apiSecret}`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to send an event to GA4. Status: ${response.status}`);
+    }
+
+    console.log('Event sent to GA4 success.');
+}
 
 function getJSONObjectForMovieRequirement(req) {
     var json = {
