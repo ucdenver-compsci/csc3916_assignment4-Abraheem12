@@ -302,7 +302,6 @@ router.route('/reviews')
                         } else {
                             res.status(200).json({ success: true, msg: 'Created a review.' });
                             sendEventToGA4('review', getJSONObjectForMovieRequirement(req));
-                            return res.status(201).json({ message: 'Review created!' });
                         }
                     }); 
                 }
