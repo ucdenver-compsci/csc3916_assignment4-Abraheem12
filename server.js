@@ -16,7 +16,7 @@ var User = require('./Users');
 var Movie = require('./Movies');
 var Review = require('./Reviews');
 var crypto = require('crypto');
-constant fetch = require('node-fetch');
+const fetch = require('node-fetch');
 
 var app = express();
 app.use(cors());
