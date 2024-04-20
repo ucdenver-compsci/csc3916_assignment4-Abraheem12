@@ -49,7 +49,6 @@ async function sendEventToGA4(eventName, params) {
         events: [{
             name: eventName,
             params: params,
-            traffic_type: 'internal'
         }],
     };
 
