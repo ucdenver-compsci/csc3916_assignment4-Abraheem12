@@ -16,6 +16,7 @@ var User = require('./Users');
 var Movie = require('./Movies');
 var Review = require('./Reviews');
 var crypto = require('crypto');
+var fetch = require('node-fetch');
 
 var app = express();
 app.use(cors());
@@ -27,8 +28,12 @@ app.use(passport.initialize());
 
 var router = express.Router();
 
-const measurement_protocl_id = process.env.MEASUREMENT_ID; //load up the measure id from the .env file 
+const measurement_id = process.env.measurementprotocol_id; //load up the measure id from the .env file 
 const apiKey = process.env.API_KEY;// load up the api that i created in google analytics
+
+console.log(`Loaded Measurement Protocol ID: ${process.env.measurement_id}`);
+console.log(`Loaded API Key: ${process.env.apiKey}`);
+
 // function to sent an event to GA4
 async function sendEventToGA4(eventName, params) {
     const payload = {
@@ -39,7 +44,7 @@ async function sendEventToGA4(eventName, params) {
         }],
     };
 
-    const response = await fetch(`https://www.google-analytics.com/mp/collect?measurement_id=${measurementId}&api_secret=${apiSecret}`, {
+    const response = await fetch(`https://www.google-analytics.com/mp/collect?measurement_id=${measurement_id}&api_secret=${apiKey}`, {
         method: 'POST',
         body: JSON.stringify(payload),
         headers: { 'Content-Type': 'application/json' },
