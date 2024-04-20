@@ -29,7 +29,7 @@ app.use(passport.initialize());
 var router = express.Router();
 
 const measurement_id = process.env.measurementprotocol_id; //load up the measure id from the .env file 
-const apiKey = process.env.API_KEY;// load up the api that i created in google analytics
+const apiKey = process.env.api_Key;// load up the api that i created in google analytics
 
 console.log(`Loaded Measurement Protocol ID: ${process.env.measurement_id}`);
 console.log(`Loaded API Key: ${process.env.apiKey}`);
