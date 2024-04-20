@@ -28,11 +28,19 @@ app.use(passport.initialize());
 
 var router = express.Router();
 
-const measurement_id = process.env.measurementprotocol_id; //load up the measure id from the .env file 
+const measurement_id = process.env.measurementprotocol_id ; //load up the measure id from the .env file 
 const apiKey = process.env.api_Key;// load up the api that i created in google analytics
 
 console.log(`Loaded Measurement Protocol ID: ${process.env.measurement_id}`);
 console.log(`Loaded API Key: ${process.env.apiKey}`);
+
+console.log(`Loaded Measurement Protocol ID: ${measurement_id}`);
+console.log(`Loaded API Key: ${apiKey}`);
+
+
+
+
+
 
 // function to sent an event to GA4
 async function sendEventToGA4(eventName, params) {
@@ -41,6 +49,7 @@ async function sendEventToGA4(eventName, params) {
         events: [{
             name: eventName,
             params: params,
+            traffic_type: 'internal'
         }],
     };
 
